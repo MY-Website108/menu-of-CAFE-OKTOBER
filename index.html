@@ -5,106 +5,213 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAFE OKTOBER | Digital Menu & Kitchen</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root { 
-            --gold: #d4af37; 
-            --dark: #480c0c; 
-            --light: #f6ecd1; /* Default Beige */
-            --veg-bg: #bae3be; /* Mint Green */
-            --nonveg-bg: #cb0c0c73; /* Soft Violet */
+            --gold-leaf: linear-gradient(135deg, #bf953f 0%, #fcf6ba 45%, #b38728 70%, #fbf5b7 100%);
+            --royal-emerald: #041a0b; 
+            --royal-ruby: #1a0404;
+            --border-gold: #d4af37;
+            --text-beige: #f6ecd1;
             --admin-bg: #0f172a;
-            --admin-card: #1e293b;
-            --success : #10b981;
-            --veg: #27ae60;
-            --nonveg: #8e44ad; /* Violet color for button */
         }
         
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Playfair Display', serif; 
             margin: 0; 
-            background: var(--light); 
-            color: var(--dark); 
-            overflow-x: hidden; 
-            transition: background-color 0.5s ease; /* Smooth color transition */
+            background-color: var(--royal-emerald); 
+            color: var(--text-beige); 
+            transition: background-color 1.2s ease;
+            background-image: url('https://www.transparenttextures.com/patterns/black-linen.png');
         }
-        
-        /* --- CUSTOMER UI STYLES --- */
-        header { background: var(--dark); color: white; text-align: center; padding: 1.5rem 1rem; border-bottom: 4px solid var(--gold); position: relative; }
-        .container { max-width: 600px; margin: auto; padding: 15px; }
-        
-        /* Diet Toggle Styles */
-        .diet-filter { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 12px; backdrop-filter: blur(5px); }
-        .diet-btn { border: 2px solid #ddd; background: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; flex: 1; font-size: 0.9rem; }
-        
-        .diet-btn.active.veg-mode { border-color: var(--veg); color: white; background: var(--veg); }
-        .diet-btn.active.nonveg-mode { border-color: var(--nonveg); color: white; background: var(--nonveg); }
 
-        .search-box { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 25px; margin-bottom: 15px; box-sizing: border-box; font-size: 1rem; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* --- NAVIGATION & HEADER --- */
+        header { 
+            background: #000;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            border-bottom: 3px double var(--border-gold);
+            position: relative;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            letter-spacing: 5px;
+            margin: 0;
+            background: var(--gold-leaf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .staff-login {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            color: rgba(212, 175, 55, 0.5);
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        /* NEW TOP RIGHT WAITER BUTTON STYLE */
+        .waiter-access {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            color: #ff4d4d;
+            cursor: pointer;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* --- FILTERS & SEARCH --- */
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+
+        .diet-filter { 
+            display: flex; 
+            margin-bottom: 20px; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid var(--border-gold);
+            border-radius: 4px;
+        }
+
+        .diet-btn { 
+            background: transparent;
+            border: none;
+            color: var(--border-gold);
+            padding: 12px;
+            flex: 1;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            transition: 0.3s;
+        }
+
+        .diet-btn.active { background: var(--gold-leaf); color: #000; font-weight: bold; }
+
+        .search-box { 
+            width: 100%; 
+            padding: 12px; 
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border-gold);
+            color: white;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            font-family: 'Playfair Display', serif;
+        }
+
         .categories { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-btn { background: #eee; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
-        .cat-btn.active { background: var(--gold); color: white; }
-        
-        .dish-item { background: white; border-radius: 15px; margin-bottom: 15px; display: flex; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 1px solid #efefef; height: 140px; }
-        .dish-img-container { width: 130px; min-width: 130px; height: 100%; background: #f4f4f4; }
-        .dish-img-container img { width: 100%; height: 100%; object-fit: cover; }
-        .dish-content { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .dish-info h3 { margin: 0; font-size: 1rem; color: #460d0d; line-height: 1.2; }
-        .dish-info p { margin: 4px 0; color: #777; font-size: 0.75rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .price { color: var(--gold); font-weight: bold; font-size: 1rem; display: block; }
-        .order-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-        .qty-input { width: 45px; padding: 6px; border-radius: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; }
-        .btn-order { background: var(--dark); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
-        
-        #call-waiter-btn { position: fixed; bottom: 20px; right: 20px; background: #e74c3c; color: white; border: none; padding: 15px 20px; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 15px rgba(231,76,60,0.4); cursor: pointer; z-index: 99; }
-        
-        /* Staff Access top left */
-        .staff-login { position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.3); font-size: 0.65rem; cursor: pointer; z-index: 100; padding: 5px; }
+        .cat-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(212, 175, 55, 0.3); padding: 8px 18px; border-radius: 20px; cursor: pointer; color: var(--text-beige); white-space: nowrap; font-size: 0.8rem; }
+        .cat-btn.active { border-color: var(--border-gold); background: rgba(212, 175, 55, 0.2); }
 
-        /* --- ADMIN & PANDA LOGIC --- */
-        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--admin-bg); z-index: 1000; overflow-y: auto; color: white; }
-        .admin-header { background: #1e293b; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 101; }
-        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-        .order-card { background: var(--admin-card); border-radius: 15px; padding: 20px; border: 1px solid #334155; position: relative; }
-        .waiter-alert { border: 2px solid #e74c3c; background: #451a1a; }
-        .table-badge { background: var(--gold); color: black; padding: 4px 10px; border-radius: 8px; font-weight: 800; }
-        .btn-serve { background: var(--success); color: white; width: 100%; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        /* --- MENU ITEMS --- */
+        .dish-item { 
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            margin-bottom: 15px; 
+            display: flex; 
+            height: 130px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .dish-item.sold-out { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
+        .sold-out-badge { color: #ff4d4d; font-size: 0.7rem; font-weight: bold; font-family: 'Cinzel'; }
+
+        .dish-img-container { width: 130px; min-width: 130px; }
+        .dish-img-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .dish-content { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .dish-info h3 { margin: 0; font-family: 'Cinzel', serif; color: var(--border-gold); font-size: 0.95rem; }
+        .dish-info p { margin: 4px 0; color: #aaa; font-size: 0.75rem; font-style: italic; }
+
+        .price-row { display: flex; justify-content: space-between; align-items: center; }
+        .price { font-weight: bold; color: #fff; font-size: 1.1rem; }
+
+        .btn-order { 
+            background: transparent;
+            border: 1px solid var(--border-gold);
+            color: var(--border-gold);
+            padding: 6px 14px;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            transition: 0.3s;
+        }
+        .btn-order:hover { background: var(--gold-leaf); color: #000; }
+
+        /* --- CUTE CAT LOGIN MODAL --- */
+        #cat-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; }
+        .cat-container { background: white; padding: 30px; border-radius: 12px; width: 300px; text-align: center; }
         
-        #panda-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
-        .panda-container { background: white; padding: 30px; border-radius: 20px; width: 320px; text-align: center; position: relative; }
-        .panda-face { width: 100px; height: 100px; background: white; border: 4px solid #333; border-radius: 50% 50% 45% 45%; margin: 0 auto 20px; position: relative; }
-        .ear { width: 35px; height: 35px; background: #333; border-radius: 50%; position: absolute; top: -10px; }
-        .ear.left { left: -5px; } .ear.right { right: -5px; }
-        .eye { width: 25px; height: 30px; background: #333; border-radius: 50%; position: absolute; top: 25px; display: flex; align-items: center; justify-content: center; }
-        .eye.left { left: 15px; transform: rotate(15deg); }
-        .eye.right { right: 15px; transform: rotate(-15deg); }
-        .pupil { width: 8px; height: 8px; background: white; border-radius: 50%; }
-        .nose { width: 15px; height: 10px; background: #333; border-radius: 50%; position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); }
-        .hand { width: 40px; height: 40px; background: #333; border-radius: 50%; position: absolute; top: 70px; transition: 0.4s; z-index: 10; }
-        .hand.left { left: -10px; } .hand.right { right: -10px; }
-        .panda-container.shame .hand.left { transform: translate(25px, -45px); }
-        .panda-container.shame .hand.right { transform: translate(-25px, -45px); }
-        .panda-input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .panda-btn { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .cat-face { width: 100px; height: 85px; background: #eee; border: 3px solid #333; border-radius: 50% 50% 45% 45%; margin: 0 auto 20px; position: relative; }
+        .cat-ear { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid #333; position: absolute; top: -12px; }
+        .cat-ear.left { left: 10px; transform: rotate(-15deg); }
+        .cat-ear.right { right: 10px; transform: rotate(15deg); }
+        .cat-eye { width: 12px; height: 12px; background: #333; border-radius: 50%; position: absolute; top: 35px; }
+        .cat-eye.left { left: 25px; } .cat-eye.right { right: 25px; }
+        .cat-paw { width: 35px; height: 35px; background: #eee; border: 2px solid #333; border-radius: 50%; position: absolute; top: 65px; transition: 0.4s; z-index: 10; }
+        .cat-paw.left { left: 5px; } .cat-paw.right { right: 5px; }
+        
+        .cat-container.shame .cat-paw.left { transform: translate(20px, -35px); }
+        .cat-container.shame .cat-paw.right { transform: translate(-20px, -35px); }
+        
+        .cat-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; text-align: center; }
+
+        /* --- ADMIN PANEL --- */
+        #admin-panel { display: none; position: fixed; inset: 0; background: var(--admin-bg); z-index: 1000; overflow-y: auto; padding: 20px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 15px; margin-bottom: 20px; }
+        .order-card { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .waiter-alert { border: 2px solid #ef4444; background: #450a0a; }
+        .table-badge { background: var(--gold-leaf); color: #000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 0.8rem; }
+
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .admin-tab-btn { background: #1e293b; color: white; border: 1px solid #334155; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: 'Cinzel'; }
+        .admin-tab-btn.active { background: var(--border-gold); color: black; }
+        .stock-control-item { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #334155; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* FINANCE STYLES */
+        .finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { text-align: center; padding: 20px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+        .stat-val { font-size: 1.5rem; color: #10b981; font-weight: bold; margin-top: 5px; }
+        
+        .calendar-section { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+        .date-picker { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border-gold); color: white; font-family: 'Cinzel'; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="customer-view">
     <header>
-        <div class="staff-login" onclick="openManager()">Staff Access</div>
-        <h1 style="margin:0; letter-spacing:2px; font-size: 1.8rem;">CAFE OKTOBER</h1>
-        <p style="margin:5px 0 0; opacity: 0.8; font-size: 0.9rem;">Bongaigaon Multi-Cuisine Menu</p>
+        <div class="staff-login" onclick="openManager()">STAFF ACCESS</div>
+        <div class="waiter-access" onclick="callWaiter()">🛎️ CALL WAITER</div>
+        
+        <h1>CAFE OKTOBER</h1>
+        <p style="margin:5px 0 0; color: var(--border-gold); font-size: 0.8rem; letter-spacing: 2px;">BONGAIGAON DIGITAL MENU</p>
     </header>
     
     <div class="container">
         <div class="diet-filter">
-            <button id="veg-toggle" class="diet-btn veg-mode active" onclick="setDiet('Veg')">🟢 Veg Only</button>
-            <button id="nonveg-toggle" class="diet-btn nonveg-mode" onclick="setDiet('Non-Veg')">🔴 Non-Veg Mode</button>
+            <button id="veg-toggle" class="diet-btn active" onclick="setDiet('Veg')">🟢 Veg Menu</button>
+            <button id="nonveg-toggle" class="diet-btn" onclick="setDiet('Non-Veg')">🔴 Non-Veg Menu</button>
         </div>
 
-        <input type="text" id="searchInput" class="search-box" placeholder="Search dish..." onkeyup="filterMenu()">
+        <input type="text" id="searchInput" class="search-box" placeholder="Search for your favorite dish..." onkeyup="filterMenu()">
         
         <div class="categories">
             <button class="cat-btn active" onclick="filterCategory('All', this)">All</button>
@@ -116,37 +223,61 @@
 
         <div id="menu-list"></div>
     </div>
-
-    <button id="call-waiter-btn" onclick="callWaiter()">🔔 Call Waiter</button>
 </div>
 
-<div id="panda-modal">
-    <div class="panda-container" id="panda-box">
-        <div class="panda-face">
-            <div class="ear left"></div><div class="ear right"></div>
-            <div class="eye left"><div class="pupil"></div></div>
-            <div class="eye right"><div class="pupil"></div></div>
-            <div class="nose"></div>
-            <div class="hand left"></div><div class="hand right"></div>
+<div id="cat-modal">
+    <div class="cat-container" id="cat-box">
+        <div class="cat-face">
+            <div class="cat-ear left"></div><div class="cat-ear right"></div>
+            <div class="cat-eye left"></div><div class="cat-eye right"></div>
+            <div class="cat-paw left"></div><div class="cat-paw right"></div>
         </div>
-        <h3 style="margin-top:0; color:#333">Staff Login</h3>
-        <input type="password" id="manager-pass" class="panda-input" placeholder="Enter Password" 
-               onfocus="document.getElementById('panda-box').classList.add('shame')"
-               onblur="document.getElementById('panda-box').classList.remove('shame')">
-        <button class="panda-btn" onclick="verifyManager()">Login</button>
-        <p onclick="closePanda()" style="font-size: 12px; color: #777; cursor: pointer; margin-top: 10px;">Cancel</p>
+        <h3 style="margin:0; color:#333; font-family:'Cinzel'">Staff Login</h3>
+        <input type="password" id="manager-pass" class="cat-input" placeholder="Password" 
+               onfocus="document.getElementById('cat-box').classList.add('shame')"
+               onblur="document.getElementById('cat-box').classList.remove('shame')">
+        <button class="btn-order" style="width:100%; color:#000; background:var(--gold-leaf); border:none;" onclick="verifyManager()">Login</button>
+        <p onclick="closeCat()" style="font-size: 11px; color: #888; cursor: pointer; margin-top: 15px; text-transform: uppercase;">Back to Menu</p>
     </div>
 </div>
 
 <div id="admin-panel">
     <div class="admin-header">
         <div>
-            <h2 style="margin:0; color:var(--gold);">KITCHEN LIVE</h2>
-            <small id="live-clock" style="color:var(--success); font-weight: bold;"></small>
+            <h2 style="margin:0; color:var(--border-gold); font-family:'Cinzel';">KITCHEN LIVE</h2>
+            <small id="live-clock" style="color:#10b981; font-family: monospace;"></small>
         </div>
-        <button onclick="location.reload()" style="background:transparent; border:1px solid #ff4d4d; color:#ff4d4d; padding:8px 15px; border-radius:8px; cursor:pointer;">Logout</button>
+        <button onclick="location.reload()" class="btn-order">Logout</button>
     </div>
-    <div id="order-feed" class="order-grid"></div>
+
+    <div class="admin-tabs">
+        <button class="admin-tab-btn active" id="btn-tab-orders" onclick="switchAdminTab('orders')">Orders</button>
+        <button class="admin-tab-btn" id="btn-tab-inventory" onclick="switchAdminTab('inventory')">Inventory</button>
+        <button class="admin-tab-btn" id="btn-tab-finance" onclick="switchAdminTab('finance')">Finance</button>
+    </div>
+
+    <div id="order-feed"></div>
+    <div id="inventory-list" style="display:none;"></div>
+    
+    <div id="finance-dashboard" style="display:none;">
+        <div class="calendar-section">
+            <div style="font-size:0.75rem; color:var(--border-gold); font-family:'Cinzel'">Select Date for Sales Report:</div>
+            <input type="date" id="finance-calendar" class="date-picker" onchange="calculateFinance()">
+        </div>
+
+        <div class="finance-grid">
+            <div class="stat-card">
+                <div style="font-size:0.7rem; color:#aaa; font-family:'Cinzel'">Selected Day Total</div>
+                <div id="today-income" class="stat-val">₹0</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:0.7rem; color:#aaa; font-family:'Cinzel'">Monthly Total</div>
+                <div id="month-income" class="stat-val" style="color:var(--border-gold)">₹0</div>
+            </div>
+        </div>
+        <h3 style="color:var(--border-gold); font-family:Cinzel; font-size:0.9rem;">Daily Sales Log</h3>
+        <div id="finance-log"></div>
+    </div>
 </div>
 
 <script>
@@ -155,14 +286,14 @@
     const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
     const menuData = [
-        { id: 1, name: "Paneer Tikka / Malai Tikka", price: "₹280", cat: "Indian", desc: "Spicy or creamy grilled paneer", img: "Paneer Tikka.png", type: "Veg" },
-        { id: 2, name: "Chicken Tikka / Malai Tikka", price: "₹320", cat: "Indian", desc: "Classic smoky tandoori chicken", img: "Chicken Tikka.png", type: "Non-Veg" },
-        { id: 3, name: "Paneer Butter Masala", price: "₹285", cat: "Indian", desc: "Creamy tomato-based gravy", img: "Paneer Butter Masala.png", type: "Veg" },
-        { id: 4, name: "Chicken Butter Masala", price: "₹340", cat: "Indian", desc: "Tender chicken in rich buttery gravy", img: "Chicken Butter Masala.png", type: "Non-Veg" },
-        { id: 5, name: "Drums of Heaven", price: "₹260", cat: "Oriental", desc: "Spicy Indo-Chinese chicken lollipops", img: "Drums of Heaven.png", type: "Non-Veg" },
-        { id: 6, name: "Hakka Noodles (Veg)", price: "₹180", cat: "Oriental", desc: "Stir-fried noodles with veg", img: "Hakka Noodles.png", type: "Veg" },
-        { id: 7, name: "Pasta Alfredo (White)", price: "₹280", cat: "Italian", desc: "Creamy white sauce pasta", img: "Pasta Alfredo.png", type: "Veg" },
-        { id: 8, name: "Virgin Mojito", price: "₹140", cat: "Beverages", desc: "Minty refreshing lime mocktail", img: "Virgin Mojito.png", type: "Bev" }
+        { id: 1, name: "Paneer Tikka / Malai Tikka", price: "₹280", cat: "Indian", desc: "Spicy or creamy grilled paneer", img: "Paneer Tikka.png", type: "Veg", in_stock: true },
+        { id: 2, name: "Chicken Tikka / Malai Tikka", price: "₹320", cat: "Indian", desc: "Classic smoky tandoori chicken", img: "Chicken Tikka.png", type: "Non-Veg", in_stock: true },
+        { id: 3, name: "Paneer Butter Masala", price: "₹285", cat: "Indian", desc: "Creamy tomato-based gravy", img: "Paneer Butter Masala.png", type: "Veg", in_stock: true },
+        { id: 4, name: "Chicken Butter Masala", price: "₹340", cat: "Indian", desc: "Tender chicken in rich buttery gravy", img: "Chicken Butter Masala.png", type: "Non-Veg", in_stock: true },
+        { id: 5, name: "Drums of Heaven", price: "₹260", cat: "Oriental", desc: "Spicy Indo-Chinese chicken lollipops", img: "Drums of Heaven.png", type: "Non-Veg", in_stock: true },
+        { id: 6, name: "Hakka Noodles (Veg)", price: "₹180", cat: "Oriental", desc: "Stir-fried noodles with veg", img: "Hakka Noodles.png", type: "Veg", in_stock: true },
+        { id: 7, name: "Pasta Alfredo (White)", price: "₹280", cat: "Italian", desc: "Creamy white sauce pasta", img: "Pasta Alfredo.png", type: "Veg", in_stock: true },
+        { id: 8, name: "Virgin Mojito", price: "₹140", cat: "Beverages", desc: "Minty refreshing lime mocktail", img: "Virgin Mojito.png", type: "Bev", in_stock: true }
     ];
 
     let currentCategory = "All";
@@ -170,33 +301,30 @@
 
     function setDiet(diet) {
         currentDiet = diet;
-        
-        // Update Buttons
         document.getElementById('veg-toggle').classList.toggle('active', diet === 'Veg');
         document.getElementById('nonveg-toggle').classList.toggle('active', diet === 'Non-Veg');
-        
-        // Update Background Color
-        if (diet === 'Veg') {
-            document.body.style.backgroundColor = "var(--veg-bg)";
-        } else {
-            document.body.style.backgroundColor = "var(--nonveg-bg)";
-        }
-        
+        document.body.style.backgroundColor = (diet === 'Veg') ? "var(--royal-emerald)" : "var(--royal-ruby)";
         filterMenu();
     }
 
     function renderMenu(items) {
         const list = document.getElementById('menu-list');
         list.innerHTML = items.map(d => `
-            <div class="dish-item">
-                <div class="dish-img-container"><img src="${d.img}" alt="${d.name}" onerror="this.src='https://via.placeholder.com/130x140?text=CAFE+OKTOBER'"></div>
+            <div class="dish-item ${!d.in_stock ? 'sold-out' : ''}">
+                <div class="dish-img-container"><img src="${d.img}" alt="${d.name}" onerror="this.src='https://via.placeholder.com/130x130?text=CAFE+OKTOBER'"></div>
                 <div class="dish-content">
-                    <div class="dish-info"><h3>${d.name}</h3><p>${d.desc}</p></div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="dish-info">
+                        <h3>${d.name}</h3>
+                        ${!d.in_stock ? '<span class="sold-out-badge">OUT OF STOCK</span>' : ''}
+                        <p>${d.desc}</p>
+                    </div>
+                    <div class="price-row">
                         <span class="price">${d.price}</span>
-                        <div class="order-controls">
-                            <input type="number" id="qty-${d.id}" class="qty-input" value="1" min="1" max="10">
-                            <button class="btn-order" onclick="placeOrder('${d.name}', ${d.id})">Order</button>
+                        <div style="display:flex; gap:8px;">
+                            <input type="number" id="qty-${d.id}" value="1" min="1" style="width:35px; background:transparent; border:1px solid var(--border-gold); color:white; text-align:center;">
+                            <button class="btn-order" onclick="placeOrder('${d.name}', ${d.id})" ${!d.in_stock ? 'disabled' : ''}>
+                                ${d.in_stock ? 'Order' : 'N/A'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -222,61 +350,139 @@
         filterMenu();
     }
 
-    // SUPABASE & STAFF LOGIC
+    function switchAdminTab(tab) {
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('order-feed').style.display = 'none';
+        document.getElementById('inventory-list').style.display = 'none';
+        document.getElementById('finance-dashboard').style.display = 'none';
+
+        if (tab === 'orders') {
+            document.getElementById('btn-tab-orders').classList.add('active');
+            document.getElementById('order-feed').style.display = 'block';
+        } else if (tab === 'inventory') {
+            document.getElementById('btn-tab-inventory').classList.add('active');
+            document.getElementById('inventory-list').style.display = 'block';
+            renderInventoryManager();
+        } else if (tab === 'finance') {
+            document.getElementById('btn-tab-finance').classList.add('active');
+            document.getElementById('finance-dashboard').style.display = 'block';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('finance-calendar').value = today;
+            calculateFinance();
+        }
+    }
+
+    async function calculateFinance() {
+        const { data } = await _supabase.from('orders').select('*').eq('status', 'Served');
+        if (!data) return;
+        const selectedDateVal = document.getElementById('finance-calendar').value;
+        const selectedDateStr = selectedDateVal ? new Date(selectedDateVal).toLocaleDateString('en-IN') : null;
+        let selectedDayTotal = 0;
+        let monthlyTotal = 0;
+        const dailySummary = {};
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        data.forEach(order => {
+            const dishName = order.items.split(' (x')[0];
+            const qtyPart = order.items.match(/\(x(\d+)\)/);
+            const qty = qtyPart ? parseInt(qtyPart[1]) : 1;
+            const dish = menuData.find(m => m.name === dishName);
+            if (dish) {
+                const price = parseInt(dish.price.replace('₹', ''));
+                const total = price * qty;
+                const dateObj = new Date(order.created_at);
+                const dateStr = dateObj.toLocaleDateString('en-IN');
+                dailySummary[dateStr] = (dailySummary[dateStr] || 0) + total;
+                if(dateStr === selectedDateStr) selectedDayTotal += total;
+                if(dateObj.getMonth() === thisMonth && dateObj.getFullYear() === thisYear) monthlyTotal += total;
+            }
+        });
+        document.getElementById('today-income').innerText = '₹' + selectedDayTotal;
+        document.getElementById('month-income').innerText = '₹' + monthlyTotal;
+        const log = document.getElementById('finance-log');
+        log.innerHTML = Object.keys(dailySummary).sort((a,b) => new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-')))
+            .map(date => {
+                const isSelected = date === selectedDateStr;
+                return `<div class="stock-control-item" style="margin-bottom:5px; border-color:${isSelected ? 'var(--border-gold)' : '#334155'}; background:${isSelected ? '#1e293b' : 'rgba(30, 41, 59, 0.5)'}">
+                    <div style="font-family:monospace;">${date} ${isSelected ? '⬅️ Selected' : ''}</div>
+                    <div style="color:#10b981; font-weight:bold;">₹${dailySummary[date]}</div>
+                </div>`
+            }).join('') || "<p style='text-align:center; opacity:0.5;'>No data yet...</p>";
+    }
+
+    function renderInventoryManager() {
+        const list = document.getElementById('inventory-list');
+        list.innerHTML = `<h3 style="color:var(--border-gold); font-family:Cinzel;">Manage Menu Availability</h3>` + 
+        menuData.map(d => `<div class="stock-control-item"><div><div style="font-family:Cinzel; font-size:0.9rem;">${d.name}</div><div style="font-size:0.7rem; color:#888;">${d.cat}</div></div><label class="switch"><input type="checkbox" ${d.in_stock ? 'checked' : ''} onchange="updateStock(${d.id}, this.checked)"><span class="slider"></span></label></div>`).join('');
+    }
+
+    async function updateStock(dishId, status) {
+        const item = menuData.find(d => d.id === dishId);
+        if (item) item.in_stock = status;
+        await _supabase.from('menu_stock').upsert({ id: dishId, in_stock: status });
+        filterMenu();
+    }
+
+    async function syncStock() {
+        const { data } = await _supabase.from('menu_stock').select('*');
+        if (data) {
+            data.forEach(stockRow => {
+                const dish = menuData.find(m => m.id === stockRow.id);
+                if (dish) dish.in_stock = stockRow.in_stock;
+            });
+            filterMenu();
+        }
+    }
+
     setInterval(() => {
         const now = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
-        const clockEl = document.getElementById('live-clock');
-        if(clockEl) clockEl.innerText = "● BONGAIGAON TIME: " + now;
+        if(document.getElementById('live-clock')) document.getElementById('live-clock').innerText = "● LIVE TIME: " + now;
+        if(document.getElementById('admin-panel').style.display === 'block' && document.getElementById('btn-tab-orders').classList.contains('active')) fetchAdminOrders();
     }, 1000);
 
     async function placeOrder(dish, id) {
         const qty = document.getElementById(`qty-${id}`).value;
-        const table = prompt("Table Number:");
+        const table = prompt("Enter Table Number:");
         if (!table) return;
         const { error } = await _supabase.from('orders').insert([{ items: `${dish} (x${qty})`, table_no: table, status: 'New' }]);
-        if (error) alert("Error!"); else alert(`Sent: ${qty}x ${dish}`);
+        if (!error) alert("Order sent to Kitchen!");
     }
 
     async function callWaiter() {
         const table = prompt("Table Number:");
         if (!table) return;
         await _supabase.from('orders').insert([{ items: "🚨 WAITER REQUESTED", table_no: table, status: 'New' }]);
-        alert("Waiter called!");
+        alert("A waiter will be with you shortly.");
     }
 
-    function openManager() {
-        document.getElementById('panda-modal').style.display = 'flex';
-        document.getElementById('manager-pass').value = "";
-    }
-
-    function closePanda() { document.getElementById('panda-modal').style.display = 'none'; }
-
+    function openManager() { document.getElementById('cat-modal').style.display = 'flex'; }
+    function closeCat() { document.getElementById('cat-modal').style.display = 'none'; }
     function verifyManager() {
-        const pass = document.getElementById('manager-pass').value;
-        if (pass === "mannager108cafeoktober") {
-            closePanda();
+        if (document.getElementById('manager-pass').value === "mannager108cafeoktober") {
+            closeCat();
             document.getElementById('customer-view').style.display = 'none';
             document.getElementById('admin-panel').style.display = 'block';
             initAdmin();
-        } else { alert("Wrong Password!"); }
+        } else alert("Access Denied");
     }
 
     function initAdmin() {
         fetchAdminOrders();
-        _supabase.channel('kitchen-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchAdminOrders()).subscribe();
+        _supabase.channel('kitchen').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchAdminOrders()).subscribe();
     }
 
     async function fetchAdminOrders() {
         const { data } = await _supabase.from('orders').select('*').eq('status', 'New').order('created_at', { ascending: false });
         const feed = document.getElementById('order-feed');
-        if (!data || data.length === 0) { feed.innerHTML = "<div style='opacity:0.5; padding:50px;'>Waiting...</div>"; return; }
-        feed.innerHTML = data.map(o => `
-            <div class="order-card ${o.items.includes('🚨') ? 'waiter-alert' : ''}">
-                <div style="display:flex; justify-content:space-between;"><span class="table-badge">TABLE ${o.table_no}</span></div>
-                <div class="items-text">${o.items}</div>
-                <button class="btn-serve" onclick="finishOrder('${o.id}')">MARK SERVED</button>
-            </div>
-        `).join('');
+        if (!data || data.length === 0) { 
+            if (document.getElementById('btn-tab-orders').classList.contains('active')) feed.innerHTML = "<p style='text-align:center; opacity:0.4;'>No active orders...</p>";
+            return; 
+        }
+        feed.innerHTML = data.map(o => {
+            const diffMins = Math.floor((new Date() - new Date(o.created_at)) / 60000);
+            return `<div class="order-card ${o.items.includes('🚨') ? 'waiter-alert' : ''}"><div style="display:flex; justify-content:space-between; align-items:center;"><span class="table-badge">TABLE ${o.table_no}</span><span style="font-size:0.8rem; color:${diffMins > 10 ? '#ff4d4d' : '#10b981'}">${diffMins}m ago</span></div><div style="margin:15px 0; font-size:1.1rem; color:#fff;">${o.items}</div><button class="btn-order" style="width:100%;" onclick="finishOrder('${o.id}')">Mark Served</button></div>`;
+        }).join('');
     }
 
     async function finishOrder(id) {
@@ -284,9 +490,8 @@
         fetchAdminOrders();
     }
 
-    // Initial State
     setDiet('Veg');
-</script><script src='https://cdn.jotfor.ms/agent/embedjs/019b6a7a750d7712994bdcda8f0118de9d4f/embed.js'>
+    syncStock();
 </script>
 </body>
 </html>
