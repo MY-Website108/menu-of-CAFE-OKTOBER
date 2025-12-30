@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAFE OKTOBER | Digital Menu & Kitchen</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root { 
+            --gold: #d4af37; 
+            --dark: #480c0c; 
+            --light: #f6ecd1; /* Default Beige */
+            --veg-bg: #bae3be; /* Mint Green */
+            --nonveg-bg: #cb0c0c73; /* Soft Violet */
+            --admin-bg: #0f172a;
+            --admin-card: #1e293b;
+            --success : #10b981;
+            --veg: #27ae60;
+            --nonveg: #8e44ad; /* Violet color for button */
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background: var(--light); 
+            color: var(--dark); 
+            overflow-x: hidden; 
+            transition: background-color 0.5s ease; /* Smooth color transition */
+        }
+        
+        /* --- CUSTOMER UI STYLES --- */
+        header { background: var(--dark); color: white; text-align: center; padding: 1.5rem 1rem; border-bottom: 4px solid var(--gold); position: relative; }
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        
+        /* Diet Toggle Styles */
+        .diet-filter { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 12px; backdrop-filter: blur(5px); }
+        .diet-btn { border: 2px solid #ddd; background: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; flex: 1; font-size: 0.9rem; }
+        
+        .diet-btn.active.veg-mode { border-color: var(--veg); color: white; background: var(--veg); }
+        .diet-btn.active.nonveg-mode { border-color: var(--nonveg); color: white; background: var(--nonveg); }
+
+        .search-box { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 25px; margin-bottom: 15px; box-sizing: border-box; font-size: 1rem; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .categories { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn { background: #eee; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
+        .cat-btn.active { background: var(--gold); color: white; }
+        
+        .dish-item { background: white; border-radius: 15px; margin-bottom: 15px; display: flex; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 1px solid #efefef; height: 140px; }
+        .dish-img-container { width: 130px; min-width: 130px; height: 100%; background: #f4f4f4; }
+        .dish-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .dish-content { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .dish-info h3 { margin: 0; font-size: 1rem; color: #460d0d; line-height: 1.2; }
+        .dish-info p { margin: 4px 0; color: #777; font-size: 0.75rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .price { color: var(--gold); font-weight: bold; font-size: 1rem; display: block; }
+        .order-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .qty-input { width: 45px; padding: 6px; border-radius: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; }
+        .btn-order { background: var(--dark); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        
+        #call-waiter-btn { position: fixed; bottom: 20px; right: 20px; background: #e74c3c; color: white; border: none; padding: 15px 20px; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 15px rgba(231,76,60,0.4); cursor: pointer; z-index: 99; }
+        
+        /* Staff Access top left */
+        .staff-login { position: absolute; top: 10px; left: 10px; color: rgba(255,255,255,0.3); font-size: 0.65rem; cursor: pointer; z-index: 100; padding: 5px; }
+
+        /* --- ADMIN & PANDA LOGIC --- */
+        #admin-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--admin-bg); z-index: 1000; overflow-y: auto; color: white; }
+        .admin-header { background: #1e293b; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 101; }
+        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+        .order-card { background: var(--admin-card); border-radius: 15px; padding: 20px; border: 1px solid #334155; position: relative; }
+        .waiter-alert { border: 2px solid #e74c3c; background: #451a1a; }
+        .table-badge { background: var(--gold); color: black; padding: 4px 10px; border-radius: 8px; font-weight: 800; }
+        .btn-serve { background: var(--success); color: white; width: 100%; border: none; padding: 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        
+        #panda-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
+        .panda-container { background: white; padding: 30px; border-radius: 20px; width: 320px; text-align: center; position: relative; }
+        .panda-face { width: 100px; height: 100px; background: white; border: 4px solid #333; border-radius: 50% 50% 45% 45%; margin: 0 auto 20px; position: relative; }
+        .ear { width: 35px; height: 35px; background: #333; border-radius: 50%; position: absolute; top: -10px; }
+        .ear.left { left: -5px; } .ear.right { right: -5px; }
+        .eye { width: 25px; height: 30px; background: #333; border-radius: 50%; position: absolute; top: 25px; display: flex; align-items: center; justify-content: center; }
+        .eye.left { left: 15px; transform: rotate(15deg); }
+        .eye.right { right: 15px; transform: rotate(-15deg); }
+        .pupil { width: 8px; height: 8px; background: white; border-radius: 50%; }
+        .nose { width: 15px; height: 10px; background: #333; border-radius: 50%; position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); }
+        .hand { width: 40px; height: 40px; background: #333; border-radius: 50%; position: absolute; top: 70px; transition: 0.4s; z-index: 10; }
+        .hand.left { left: -10px; } .hand.right { right: -10px; }
+        .panda-container.shame .hand.left { transform: translate(25px, -45px); }
+        .panda-container.shame .hand.right { transform: translate(-25px, -45px); }
+        .panda-input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .panda-btn { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="customer-view">
+    <header>
+        <div class="staff-login" onclick="openManager()">Staff Access</div>
+        <h1 style="margin:0; letter-spacing:2px; font-size: 1.8rem;">CAFE OKTOBER</h1>
+        <p style="margin:5px 0 0; opacity: 0.8; font-size: 0.9rem;">Bongaigaon Multi-Cuisine Menu</p>
+    </header>
+    
+    <div class="container">
+        <div class="diet-filter">
+            <button id="veg-toggle" class="diet-btn veg-mode active" onclick="setDiet('Veg')">🟢 Veg Only</button>
+            <button id="nonveg-toggle" class="diet-btn nonveg-mode" onclick="setDiet('Non-Veg')">🔴 Non-Veg Mode</button>
+        </div>
+
+        <input type="text" id="searchInput" class="search-box" placeholder="Search dish..." onkeyup="filterMenu()">
+        
+        <div class="categories">
+            <button class="cat-btn active" onclick="filterCategory('All', this)">All</button>
+            <button class="cat-btn" onclick="filterCategory('Indian', this)">Indian</button>
+            <button class="cat-btn" onclick="filterCategory('Oriental', this)">Oriental</button>
+            <button class="cat-btn" onclick="filterCategory('Italian', this)">Italian</button>
+            <button class="cat-btn" onclick="filterCategory('Beverages', this)">Beverages</button>
+        </div>
+
+        <div id="menu-list"></div>
+    </div>
+
+    <button id="call-waiter-btn" onclick="callWaiter()">🔔 Call Waiter</button>
+</div>
+
+<div id="panda-modal">
+    <div class="panda-container" id="panda-box">
+        <div class="panda-face">
+            <div class="ear left"></div><div class="ear right"></div>
+            <div class="eye left"><div class="pupil"></div></div>
+            <div class="eye right"><div class="pupil"></div></div>
+            <div class="nose"></div>
+            <div class="hand left"></div><div class="hand right"></div>
+        </div>
+        <h3 style="margin-top:0; color:#333">Staff Login</h3>
+        <input type="password" id="manager-pass" class="panda-input" placeholder="Enter Password" 
+               onfocus="document.getElementById('panda-box').classList.add('shame')"
+               onblur="document.getElementById('panda-box').classList.remove('shame')">
+        <button class="panda-btn" onclick="verifyManager()">Login</button>
+        <p onclick="closePanda()" style="font-size: 12px; color: #777; cursor: pointer; margin-top: 10px;">Cancel</p>
+    </div>
+</div>
+
+<div id="admin-panel">
+    <div class="admin-header">
+        <div>
+            <h2 style="margin:0; color:var(--gold);">KITCHEN LIVE</h2>
+            <small id="live-clock" style="color:var(--success); font-weight: bold;"></small>
+        </div>
+        <button onclick="location.reload()" style="background:transparent; border:1px solid #ff4d4d; color:#ff4d4d; padding:8px 15px; border-radius:8px; cursor:pointer;">Logout</button>
+    </div>
+    <div id="order-feed" class="order-grid"></div>
+</div>
+
+<script>
+    const SB_URL = "https://zdnnitvylhcbqufodwjc.supabase.co"; 
+    const SB_KEY = "sb_publishable_FvwPiwyPqUwc-O5CuhepOw_0fnDz5f-"; 
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    const menuData = [
+        { id: 1, name: "Paneer Tikka / Malai Tikka", price: "₹280", cat: "Indian", desc: "Spicy or creamy grilled paneer", img: "Paneer Tikka.png", type: "Veg" },
+        { id: 2, name: "Chicken Tikka / Malai Tikka", price: "₹320", cat: "Indian", desc: "Classic smoky tandoori chicken", img: "Chicken Tikka.png", type: "Non-Veg" },
+        { id: 3, name: "Paneer Butter Masala", price: "₹285", cat: "Indian", desc: "Creamy tomato-based gravy", img: "Paneer Butter Masala.png", type: "Veg" },
+        { id: 4, name: "Chicken Butter Masala", price: "₹340", cat: "Indian", desc: "Tender chicken in rich buttery gravy", img: "Chicken Butter Masala.png", type: "Non-Veg" },
+        { id: 5, name: "Drums of Heaven", price: "₹260", cat: "Oriental", desc: "Spicy Indo-Chinese chicken lollipops", img: "Drums of Heaven.png", type: "Non-Veg" },
+        { id: 6, name: "Hakka Noodles (Veg)", price: "₹180", cat: "Oriental", desc: "Stir-fried noodles with veg", img: "Hakka Noodles.png", type: "Veg" },
+        { id: 7, name: "Pasta Alfredo (White)", price: "₹280", cat: "Italian", desc: "Creamy white sauce pasta", img: "Pasta Alfredo.png", type: "Veg" },
+        { id: 8, name: "Virgin Mojito", price: "₹140", cat: "Beverages", desc: "Minty refreshing lime mocktail", img: "Virgin Mojito.png", type: "Bev" }
+    ];
+
+    let currentCategory = "All";
+    let currentDiet = "Veg";
+
+    function setDiet(diet) {
+        currentDiet = diet;
+        
+        // Update Buttons
+        document.getElementById('veg-toggle').classList.toggle('active', diet === 'Veg');
+        document.getElementById('nonveg-toggle').classList.toggle('active', diet === 'Non-Veg');
+        
+        // Update Background Color
+        if (diet === 'Veg') {
+            document.body.style.backgroundColor = "var(--veg-bg)";
+        } else {
+            document.body.style.backgroundColor = "var(--nonveg-bg)";
+        }
+        
+        filterMenu();
+    }
+
+    function renderMenu(items) {
+        const list = document.getElementById('menu-list');
+        list.innerHTML = items.map(d => `
+            <div class="dish-item">
+                <div class="dish-img-container"><img src="${d.img}" alt="${d.name}" onerror="this.src='https://via.placeholder.com/130x140?text=CAFE+OKTOBER'"></div>
+                <div class="dish-content">
+                    <div class="dish-info"><h3>${d.name}</h3><p>${d.desc}</p></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="price">${d.price}</span>
+                        <div class="order-controls">
+                            <input type="number" id="qty-${d.id}" class="qty-input" value="1" min="1" max="10">
+                            <button class="btn-order" onclick="placeOrder('${d.name}', ${d.id})">Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterMenu() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = menuData.filter(d => {
+            const matchesCategory = (currentCategory === "All" || d.cat === currentCategory);
+            const matchesSearch = d.name.toLowerCase().includes(q);
+            const matchesDiet = (d.type === currentDiet || d.type === "Bev");
+            return matchesCategory && matchesSearch && matchesDiet;
+        });
+        renderMenu(filtered);
+    }
+
+    function filterCategory(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterMenu();
+    }
+
+    // SUPABASE & STAFF LOGIC
+    setInterval(() => {
+        const now = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
+        const clockEl = document.getElementById('live-clock');
+        if(clockEl) clockEl.innerText = "● BONGAIGAON TIME: " + now;
+    }, 1000);
+
+    async function placeOrder(dish, id) {
+        const qty = document.getElementById(`qty-${id}`).value;
+        const table = prompt("Table Number:");
+        if (!table) return;
+        const { error } = await _supabase.from('orders').insert([{ items: `${dish} (x${qty})`, table_no: table, status: 'New' }]);
+        if (error) alert("Error!"); else alert(`Sent: ${qty}x ${dish}`);
+    }
+
+    async function callWaiter() {
+        const table = prompt("Table Number:");
+        if (!table) return;
+        await _supabase.from('orders').insert([{ items: "🚨 WAITER REQUESTED", table_no: table, status: 'New' }]);
+        alert("Waiter called!");
+    }
+
+    function openManager() {
+        document.getElementById('panda-modal').style.display = 'flex';
+        document.getElementById('manager-pass').value = "";
+    }
+
+    function closePanda() { document.getElementById('panda-modal').style.display = 'none'; }
+
+    function verifyManager() {
+        const pass = document.getElementById('manager-pass').value;
+        if (pass === "mannager108cafeoktober") {
+            closePanda();
+            document.getElementById('customer-view').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            initAdmin();
+        } else { alert("Wrong Password!"); }
+    }
+
+    function initAdmin() {
+        fetchAdminOrders();
+        _supabase.channel('kitchen-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchAdminOrders()).subscribe();
+    }
+
+    async function fetchAdminOrders() {
+        const { data } = await _supabase.from('orders').select('*').eq('status', 'New').order('created_at', { ascending: false });
+        const feed = document.getElementById('order-feed');
+        if (!data || data.length === 0) { feed.innerHTML = "<div style='opacity:0.5; padding:50px;'>Waiting...</div>"; return; }
+        feed.innerHTML = data.map(o => `
+            <div class="order-card ${o.items.includes('🚨') ? 'waiter-alert' : ''}">
+                <div style="display:flex; justify-content:space-between;"><span class="table-badge">TABLE ${o.table_no}</span></div>
+                <div class="items-text">${o.items}</div>
+                <button class="btn-serve" onclick="finishOrder('${o.id}')">MARK SERVED</button>
+            </div>
+        `).join('');
+    }
+
+    async function finishOrder(id) {
+        await _supabase.from('orders').update({ status: 'Served' }).eq('id', id);
+        fetchAdminOrders();
+    }
+
+    // Initial State
+    setDiet('Veg');
+</script><script src='https://cdn.jotfor.ms/agent/embedjs/019b6a7a750d7712994bdcda8f0118de9d4f/embed.js'>
+</script>
+</body>
+</html>

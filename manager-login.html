@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="login-container">
+  <h2>Manager Access</h2>
+  <input type="password" id="pass" placeholder="Enter Password">
+  <button onclick="login()" class="btn">Login</button>
+</div>
+
+<script>
+function login() {
+  if (document.getElementById("pass").value === "CafeOktober@108#Mgr") {
+    sessionStorage.setItem("mgr", "ok");
+    location.href = "manager.html";
+  } else alert("Wrong password");
+}
+</script>
+</body>
+</html>

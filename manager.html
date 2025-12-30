@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="padding: 20px;">
+    <h1>Manager Dashboard</h1>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div>
+            <h2>Live Orders</h2>
+            <div id="order-list"></div>
+        </div>
+        
+        <div>
+            <h2>Manage Events</h2>
+            <input type="text" id="evTitle" placeholder="Event Title"><br>
+            <input type="text" id="evDate" placeholder="Date (e.g. Oct 20)"><br>
+            <textarea id="evDesc" placeholder="Description"></textarea><br>
+            <button onclick="updateEvent()">Add/Update Event</button>
+            <p><i>Note: This updates the event board on the main site.</i></p>
+        </div>
+    </div>
+
+    <script src="manager.js"></script>
+</body>
+</html>
